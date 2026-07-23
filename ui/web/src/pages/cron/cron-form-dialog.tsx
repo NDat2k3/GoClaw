@@ -1,7 +1,7 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -15,13 +15,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, Upload } from "lucide-react";
 import type { CronCommandSpec, CronSchedule } from "./hooks/use-cron";
 import { slugify } from "@/lib/slug";
 import { useAgents } from "@/pages/agents/hooks/use-agents";
-import { useChannels } from "@/pages/channels/hooks/use-channels";
+import { useChannelInstances } from "@/pages/channels/hooks/use-channel-instances";
 import { ZaloContactsPicker } from "@/pages/channels/zalo/zalo-contacts-picker";
-import { FileUploadDialog } from "@/components/shared/file-upload-dialog";
 import { cronCreateSchema, type CronCreateFormData } from "@/schemas/cron.schema";
 
 interface CronFormDialogProps {
@@ -41,8 +40,9 @@ interface CronFormDialogProps {
 export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogProps) {
   const { t } = useTranslation("cron");
   const { agents } = useAgents();
-  const { channels } = useChannels();
+  const { instances: allChannels } = useChannelInstances();
   const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, control, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<CronCreateFormData>({
     resolver: zodResolver(cronCreateSchema),
@@ -286,42 +286,48 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
                 <Controller
                   control={control}
                   name="staticTargetChannel"
-                  render={({ field }) => (
-                    <Select value={field.value || ""} onValueChange={field.onChange}>
-                      <SelectTrigger className="text-base md:text-sm">
-                        <SelectValue placeholder={t("create.selectChannel")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(channels)
-                          .filter(([, ch]) => ch.type === "zalo_personal")
-                          .map(([name]) => (
-                            <SelectItem key={name} value={name}>
-                              {name}
-                            </SelectItem>
-                          ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                  render={({ field }) => {
+                    const zaloChannels = allChannels.filter((ch) => ch.channel_type === "zalo_personal");
+                    const selectedChannel = zaloChannels.find((ch) => ch.name === field.value);
+                    return (
+                      <>
+                        <Select value={field.value || ""} onValueChange={(value) => {
+                          field.onChange(value);
+                          setValue("staticTargetGroups", [], { shouldValidate: true });
+                        }}>
+                          <SelectTrigger className="text-base md:text-sm">
+                            <SelectValue placeholder={t("create.selectChannel")} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {zaloChannels.map((ch) => (
+                              <SelectItem key={ch.id} value={ch.name}>
+                                {ch.display_name || ch.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {selectedChannel && (
+                          <div className="space-y-2 mt-2">
+                            <Label>{t("create.targetGroups")}</Label>
+                            <ZaloContactsPicker
+                              instanceId={selectedChannel.id}
+                              hasCredentials={selectedChannel.has_credentials}
+                              value={staticTargetGroups}
+                              onChange={(ids) => setValue("staticTargetGroups", ids, { shouldValidate: true })}
+                            />
+                          </div>
+                        )}
+                      </>
+                    );
+                  }}
                 />
                 {errors.staticTargetChannel && (
                   <p className="text-xs text-destructive">{errors.staticTargetChannel.message}</p>
                 )}
+                {errors.staticTargetGroups && (
+                  <p className="text-xs text-destructive">{errors.staticTargetGroups.message}</p>
+                )}
               </div>
-
-              {staticTargetChannel && (
-                <div className="space-y-2">
-                  <Label>{t("create.targetGroups")}</Label>
-                  <ZaloContactsPicker
-                    instanceId={channels[staticTargetChannel]?.instance_id || ""}
-                    hasCredentials={!!channels[staticTargetChannel]?.credentials_bound}
-                    value={staticTargetGroups}
-                    onChange={(groups) => setValue("staticTargetGroups", groups.map(g => g.groupId), { shouldValidate: true })}
-                  />
-                  {errors.staticTargetGroups && (
-                    <p className="text-xs text-destructive">{errors.staticTargetGroups.message}</p>
-                  )}
-                </div>
-              )}
 
               <div className="space-y-2">
                 <Label>{t("create.message")} ({t("create.optional")})</Label>
@@ -334,31 +340,52 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
 
               <div className="space-y-2">
                 <Label>{t("create.images")} ({t("create.optional")})</Label>
-                <FileUploadDialog
-                  accept=".jpg,.jpeg,.png,.gif,.webp"
-                  maxSize={10 * 1024 * 1024}
-                  onUpload={async (files) => {
-                    setUploadingImages(true);
-                    try {
-                      const newUrls = await Promise.all(
-                        Array.from(files).map(async (file) => {
-                          const formData = new FormData();
-                          formData.append("files", file as Blob);
-                          const res = await fetch("/v1/storage/files", {
-                            method: "POST",
-                            body: formData,
-                          });
-                          const json = await res.json();
-                          return json.paths?.[0] || "";
-                        })
-                      );
-                      setValue("staticImages", [...(staticImages || []), ...newUrls.filter(Boolean)], { shouldValidate: true });
-                    } finally {
-                      setUploadingImages(false);
-                    }
-                  }}
-                  isLoading={uploadingImages}
-                />
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingImages}
+                    className="w-fit"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {uploadingImages ? t("create.uploading", "Uploading...") : t("create.images", "Add Images")}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={async (e) => {
+                      const files = e.currentTarget.files;
+                      if (!files) return;
+                      setUploadingImages(true);
+                      try {
+                        const newUrls = await Promise.all(
+                          Array.from(files).map(async (file) => {
+                            const formData = new FormData();
+                            formData.append("files", file);
+                            const res = await fetch("/v1/storage/files", {
+                              method: "POST",
+                              body: formData,
+                            });
+                            const json = await res.json();
+                            return json.paths?.[0] || "";
+                          })
+                        );
+                        const validUrls = newUrls.filter(Boolean);
+                        if (validUrls.length > 0) {
+                          setValue("staticImages", [...(staticImages || []), ...validUrls], { shouldValidate: true });
+                        }
+                      } finally {
+                        setUploadingImages(false);
+                        if (fileInputRef.current) fileInputRef.current.value = "";
+                      }
+                    }}
+                  />
+                </div>
                 {staticImages && staticImages.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {staticImages.map((img, idx) => (
