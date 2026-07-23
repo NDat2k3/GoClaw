@@ -1,0 +1,171 @@
+package tools
+
+import (
+	"context"
+
+	"github.com/google/uuid"
+
+	"github.com/nextlevelbuilder/goclaw/internal/bus"
+	"github.com/nextlevelbuilder/goclaw/internal/providers"
+	"github.com/nextlevelbuilder/goclaw/internal/store"
+)
+
+// Tool is the interface all tools must implement.
+type Tool interface {
+	Name() string
+	Description() string
+	Parameters() map[string]any
+	Execute(ctx context.Context, args map[string]any) *Result
+}
+
+// ContextualTool receives channel/chat context before execution.
+type ContextualTool interface {
+	Tool
+	SetContext(channel, chatID string)
+}
+
+// PeerKindAware tools receive the peer kind (direct/group) before execution.
+type PeerKindAware interface {
+	SetPeerKind(peerKind string)
+}
+
+// SandboxAware tools receive sandbox scope key before execution.
+// Used by exec tool to route commands through Docker containers.
+type SandboxAware interface {
+	SetSandboxKey(key string)
+}
+
+// AsyncCallback is invoked when an async tool completes.
+type AsyncCallback func(ctx context.Context, result *Result)
+
+// AsyncTool supports asynchronous execution with completion callbacks.
+type AsyncTool interface {
+	Tool
+	SetCallback(cb AsyncCallback)
+}
+
+// --- Configuration interfaces for reducing type assertions in cmd/ wiring ---
+
+// InterceptorAware tools can receive ContextFile and Memory interceptors.
+type InterceptorAware interface {
+	SetContextFileInterceptor(*ContextFileInterceptor)
+	SetMemoryInterceptor(*MemoryInterceptor)
+}
+
+// ConfigPermAware tools receive a ConfigPermissionStore for group permission checks.
+type ConfigPermAware interface {
+	SetConfigPermStore(store.ConfigPermissionStore)
+}
+
+// WorkspaceInterceptorAware tools can receive a WorkspaceInterceptor for team workspace validation.
+type WorkspaceInterceptorAware interface {
+	SetWorkspaceInterceptor(*WorkspaceInterceptor)
+}
+
+// MemoryStoreAware tools can receive a MemoryStore for Postgres queries.
+type MemoryStoreAware interface {
+	SetMemoryStore(store.MemoryStore)
+}
+
+// ApprovalAware tools can receive an ExecApprovalManager.
+type ApprovalAware interface {
+	SetApprovalManager(*ExecApprovalManager, string)
+}
+
+// PathAllowable tools can allow extra path prefixes for read access.
+type PathAllowable interface {
+	AllowPaths(...string)
+}
+
+// PathDenyable tools can deny access to specific path prefixes within the workspace.
+type PathDenyable interface {
+	DenyPaths(...string)
+}
+
+// SessionStoreAware tools can receive a SessionStore for session queries.
+type SessionStoreAware interface {
+	SetSessionStore(store.SessionStore)
+}
+
+// BusAware tools can receive a MessageBus for publishing messages.
+type BusAware interface {
+	SetMessageBus(*bus.MessageBus)
+}
+
+// ChannelSender abstracts sending a message to a channel.
+// Implemented by channels.Manager.SendToChannel.
+type ChannelSender func(ctx context.Context, channel, chatID, content string) error
+
+// ChannelSenderAware tools can receive a channel sender function.
+type ChannelSenderAware interface {
+	SetChannelSender(ChannelSender)
+}
+
+// ChannelEditor abstracts editing an existing message in a channel.
+// Implemented by channels.Manager.EditChannelMessage. Not all channel types
+// support editing arbitrary messages; unsupported channels return an error.
+type ChannelEditor func(ctx context.Context, channel, chatID string, messageID int, content string) error
+
+// ChannelEditorAware tools can receive a channel editor function.
+type ChannelEditorAware interface {
+	SetChannelEditor(ChannelEditor)
+}
+
+// ReactionSetter abstracts setting a single emoji reaction on an existing
+// message. Implemented by channels.Manager.ReactToMessage. The emoji must be a
+// platform-supported reaction (e.g. Telegram allows a fixed set like 👍/👎/🔥);
+// unsupported channels or emojis return an error.
+type ReactionSetter func(ctx context.Context, channel, chatID string, messageID int, emoji string) error
+
+// ReactionSetterAware tools can receive a reaction setter function.
+type ReactionSetterAware interface {
+	SetReactionSetter(ReactionSetter)
+}
+
+// TopicResolver resolves a forum topic name to its message_thread_id within a
+// specific chat, so the agent can post into a named topic (e.g. "Announcements").
+// Returns ("", false) when the topic is unknown.
+type TopicResolver func(ctx context.Context, channel, chatID, topicName string) (threadID string, ok bool)
+
+// TopicResolverAware tools can receive a forum topic resolver.
+type TopicResolverAware interface {
+	SetTopicResolver(TopicResolver)
+}
+
+// TopicPoster synchronously posts a message into a forum topic (by thread id)
+// and returns the sent message's id, so the agent can remember it and edit that
+// exact message later instead of posting a duplicate.
+type TopicPoster func(ctx context.Context, channel, chatID string, threadID int, content string) (messageID int, err error)
+
+// TopicPosterAware tools can receive a topic poster.
+type TopicPosterAware interface {
+	SetTopicPoster(TopicPoster)
+}
+
+// ChannelTenantChecker returns the tenant UUID for a channel instance.
+// Used by the message tool to prevent cross-tenant sends.
+// Returns (tenantID, exists). Zero tenantID means legacy/config-based channel.
+type ChannelTenantChecker func(channelName string) (tenantID uuid.UUID, exists bool)
+
+// ChannelTenantCheckerAware tools can receive a channel tenant checker.
+type ChannelTenantCheckerAware interface {
+	SetChannelTenantChecker(ChannelTenantChecker)
+}
+
+// ChannelAware is optionally implemented by tools that only work on specific channel types.
+// Tools implementing this are filtered out when the current channel type doesn't match.
+type ChannelAware interface {
+	RequiredChannelTypes() []string
+}
+
+// ToProviderDef converts a Tool to a providers.ToolDefinition for LLM APIs.
+func ToProviderDef(t Tool) providers.ToolDefinition {
+	return providers.ToolDefinition{
+		Type: "function",
+		Function: &providers.ToolFunctionSchema{
+			Name:        t.Name(),
+			Description: t.Description(),
+			Parameters:  t.Parameters(),
+		},
+	}
+}
