@@ -343,7 +343,7 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
                       const newUrls = await Promise.all(
                         Array.from(files).map(async (file) => {
                           const formData = new FormData();
-                          formData.append("files", file);
+                          formData.append("files", file as Blob);
                           const res = await fetch("/v1/storage/files", {
                             method: "POST",
                             body: formData,
