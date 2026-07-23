@@ -36,6 +36,9 @@ const SkillsPage = lazyWithRetry(() =>
 const CronPage = lazyWithRetry(() =>
   import("@/pages/cron/cron-page").then((m) => ({ default: m.CronPage })),
 );
+const ScheduledMessagesPage = lazyWithRetry(() =>
+  import("@/pages/scheduled-messages/scheduled-messages-page").then((m) => ({ default: m.ScheduledMessagesPage })),
+);
 const ConfigPage = lazyWithRetry(() =>
   import("@/pages/config/config-page").then((m) => ({ default: m.ConfigPage })),
 );
@@ -178,6 +181,7 @@ export function AppRoutes() {
           <Route path={ROUTES.SKILL_DETAIL} element={<SkillsPage key="detail" />} />
           <Route path={ROUTES.CRON} element={<CronPage key="list" />} />
           <Route path={ROUTES.CRON_DETAIL} element={<CronPage key="detail" />} />
+          <Route path={ROUTES.SCHEDULED_MESSAGES} element={<ScheduledMessagesPage />} />
           <Route path={ROUTES.HOOKS} element={<HooksPage key="list" />} />
           <Route path={ROUTES.HOOK_DETAIL} element={<HooksPage key="detail" />} />
           {/* Admin-only pages */}

@@ -1,0 +1,90 @@
+{
+  "title": "Scheduled Messages",
+  "description": "Schedule fixed messages (text + images) to auto-send to groups or people on your connected channels. No AI involved.",
+  "newMessage": "New Message",
+  "loading": "Loading...",
+  "empty": {
+    "title": "No scheduled messages",
+    "description": "Create your first message and it will be sent automatically on schedule."
+  },
+  "pickChannel": {
+    "title": "Choose a channel",
+    "description": "Pick a connected channel to send from",
+    "none": "No channels connected yet",
+    "groups": "{{count}} groups",
+    "notConnected": "Not connected"
+  },
+  "form": {
+    "createTitle": "New Scheduled Message",
+    "editTitle": "Edit Scheduled Message",
+    "name": "Label",
+    "namePlaceholder": "e.g. Morning announcement",
+    "channel": "Channel",
+    "changeChannel": "Change",
+    "content": "Message content",
+    "contentPlaceholder": "Type the message to send...",
+    "images": "Images",
+    "addImages": "Add images",
+    "uploading": "Uploading...",
+    "uploaded": "Uploaded",
+    "maxImages": "Up to 9 images",
+    "targets": "Send to",
+    "targetsHint": "Pick groups or people to receive this",
+    "searchTargets": "Search groups or people...",
+    "tabGroups": "Groups",
+    "tabUsers": "People",
+    "manualId": "Enter ID manually",
+    "add": "Add",
+    "selectedCount": "{{count}} selected",
+    "times": "Send times",
+    "timesHint": "Pick one or more times (Vietnam time, GMT+7)",
+    "addTime": "Add time",
+    "noTimes": "No times added yet",
+    "pastTime": "in the past",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "requireContent": "Message text or at least one image is required",
+    "requireTargets": "Select at least one recipient",
+    "requireTimes": "Add at least one future time",
+    "requireChannel": "Please choose a channel"
+  },
+  "card": {
+    "occurrences_one": "{{count}} send",
+    "occurrences_other": "{{count}} sends",
+    "nextSend": "Next: {{time}}",
+    "noUpcoming": "No upcoming sends",
+    "recipients": "{{count}} recipient(s)",
+    "images": "{{count}} image(s)",
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "status": {
+    "pending": "Pending",
+    "sent": "Sent",
+    "error": "Failed",
+    "disabled": "Off"
+  },
+  "history": {
+    "title": "Send history",
+    "empty": "No sends yet",
+    "upcoming": "Upcoming",
+    "past": "History"
+  },
+  "delete": {
+    "title": "Delete scheduled message",
+    "description": "Delete \"{{name}}\"? All pending sends will be cancelled.",
+    "confirm": "Delete"
+  },
+  "toast": {
+    "created": "Scheduled message created",
+    "updated": "Scheduled message updated",
+    "deleted": "Scheduled message deleted",
+    "failedCreate": "Could not create message",
+    "failedUpdate": "Could not update message",
+    "failedDelete": "Could not delete message",
+    "failedUpload": "Image upload failed",
+    "failedLoadGroups": "Could not load groups/contacts"
+  },
+  "untitled": "Untitled"
+}

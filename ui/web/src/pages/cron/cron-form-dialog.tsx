@@ -1,7 +1,6 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
-import { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -14,13 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { X, Upload } from "lucide-react";
 import type { CronCommandSpec, CronSchedule } from "./hooks/use-cron";
 import { slugify } from "@/lib/slug";
 import { useAgents } from "@/pages/agents/hooks/use-agents";
-import { useChannelInstances } from "@/pages/channels/hooks/use-channel-instances";
-import { ZaloContactsPicker } from "@/pages/channels/zalo/zalo-contacts-picker";
 import { cronCreateSchema, type CronCreateFormData } from "@/schemas/cron.schema";
 
 interface CronFormDialogProps {
@@ -31,8 +26,6 @@ interface CronFormDialogProps {
     schedule: CronSchedule;
     message?: string;
     command?: CronCommandSpec;
-    staticMessage?: { message: string; images: string[]; targets: string[] };
-    deliverChannel?: string;
     agentId?: string;
   }) => Promise<void>;
 }
@@ -40,9 +33,6 @@ interface CronFormDialogProps {
 export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogProps) {
   const { t } = useTranslation("cron");
   const { agents } = useAgents();
-  const { instances: allChannels } = useChannelInstances();
-  const [uploadingImages, setUploadingImages] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, control, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm<CronCreateFormData>({
     resolver: zodResolver(cronCreateSchema),
@@ -57,10 +47,6 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
       commandNoOutputTimeoutSeconds: "",
       commandOutputMaxBytes: "",
       commandInput: "",
-      staticMessageText: "",
-      staticImages: [],
-      staticTargetChannel: "",
-      staticTargetGroups: [],
       agentId: "",
       scheduleKind: "every",
       everyValue: "60",
@@ -70,8 +56,6 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
 
   const scheduleKind = watch("scheduleKind");
   const payloadKind = watch("payloadKind");
-  const staticTargetGroups = watch("staticTargetGroups") || [];
-  const staticImages = watch("staticImages");
 
   const onFormSubmit = async (data: CronCreateFormData) => {
     let schedule: CronSchedule;
@@ -94,21 +78,11 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
       } satisfies CronCommandSpec
       : undefined;
 
-    const staticMessage = data.payloadKind === "static_message"
-      ? {
-        message: data.staticMessageText || "",
-        images: data.staticImages || [],
-        targets: data.staticTargetGroups || [],
-      }
-      : undefined;
-
     await onSubmit({
       name: data.name,
       schedule,
       message: data.payloadKind === "agent_turn" ? data.message : undefined,
       command,
-      staticMessage,
-      deliverChannel: data.payloadKind === "static_message" ? data.staticTargetChannel : undefined,
       agentId: data.agentId || undefined,
     });
     onOpenChange(false);
@@ -166,7 +140,7 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
           <div className="space-y-2">
             <Label>{t("create.payloadType")}</Label>
             <div className="flex flex-wrap gap-2">
-              {(["agent_turn", "command", "static_message"] as const).map((kind) => (
+              {(["agent_turn", "command"] as const).map((kind) => (
                 <Button
                   key={kind}
                   type="button"
@@ -174,7 +148,7 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
                   size="sm"
                   onClick={() => setValue("payloadKind", kind, { shouldValidate: true })}
                 >
-                  {kind === "command" ? t("payload.command") : kind === "static_message" ? t("payload.staticMessage") : t("payload.agent")}
+                  {kind === "command" ? t("payload.command") : t("payload.agent")}
                 </Button>
               ))}
             </div>
@@ -278,135 +252,6 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
             </div>
           )}
 
-          {payloadKind === "static_message" && (
-            <div className="space-y-3 rounded-md border p-3">
-              <div className="space-y-2">
-                <Label>{t("create.targetChannel")}</Label>
-                <Controller
-                  control={control}
-                  name="staticTargetChannel"
-                  render={({ field }) => {
-                    const zaloChannels = allChannels.filter((ch) => ch.channel_type === "zalo_personal");
-                    const selectedChannel = zaloChannels.find((ch) => ch.name === field.value);
-                    return (
-                      <>
-                        <Select value={field.value || ""} onValueChange={(value) => {
-                          field.onChange(value);
-                          setValue("staticTargetGroups", [], { shouldValidate: true });
-                        }}>
-                          <SelectTrigger className="text-base md:text-sm">
-                            <SelectValue placeholder={t("create.selectChannel")} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {zaloChannels.map((ch) => (
-                              <SelectItem key={ch.id} value={ch.name}>
-                                {ch.display_name || ch.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {selectedChannel && (
-                          <div className="space-y-2 mt-2">
-                            <Label>{t("create.targetGroups")}</Label>
-                            <ZaloContactsPicker
-                              instanceId={selectedChannel.id}
-                              hasCredentials={selectedChannel.has_credentials}
-                              value={staticTargetGroups}
-                              onChange={(ids) => setValue("staticTargetGroups", ids, { shouldValidate: true })}
-                            />
-                          </div>
-                        )}
-                      </>
-                    );
-                  }}
-                />
-                {errors.staticTargetChannel && (
-                  <p className="text-xs text-destructive">{errors.staticTargetChannel.message}</p>
-                )}
-                {errors.staticTargetGroups && (
-                  <p className="text-xs text-destructive">{errors.staticTargetGroups.message}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t("create.message")} ({t("create.optional")})</Label>
-                <Textarea
-                  {...register("staticMessageText")}
-                  placeholder={t("create.staticMessagePlaceholder")}
-                  rows={2}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t("create.images")} ({t("create.optional")})</Label>
-                <div className="flex flex-col gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploadingImages}
-                    className="w-fit"
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {uploadingImages ? t("create.uploading", "Uploading...") : t("create.images", "Add Images")}
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    className="hidden"
-                    onChange={async (e) => {
-                      const files = e.currentTarget.files;
-                      if (!files) return;
-                      setUploadingImages(true);
-                      try {
-                        const newUrls = await Promise.all(
-                          Array.from(files).map(async (file) => {
-                            const formData = new FormData();
-                            formData.append("files", file);
-                            const res = await fetch("/v1/storage/files", {
-                              method: "POST",
-                              body: formData,
-                            });
-                            const json = await res.json();
-                            return json.paths?.[0] || "";
-                          })
-                        );
-                        const validUrls = newUrls.filter(Boolean);
-                        if (validUrls.length > 0) {
-                          setValue("staticImages", [...(staticImages || []), ...validUrls], { shouldValidate: true });
-                        }
-                      } finally {
-                        setUploadingImages(false);
-                        if (fileInputRef.current) fileInputRef.current.value = "";
-                      }
-                    }}
-                  />
-                </div>
-                {staticImages && staticImages.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {staticImages.map((img, idx) => (
-                      <Badge key={idx} variant="secondary" className="pl-2">
-                        {img.split("/").pop() || `Image ${idx + 1}`}
-                        <button
-                          type="button"
-                          onClick={() => setValue("staticImages", staticImages.filter((_, i) => i !== idx))}
-                          className="ml-1 hover:opacity-70"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-                {errors.staticImages && (
-                  <p className="text-xs text-destructive">{errors.staticImages.message}</p>
-                )}
-              </div>
-            </div>
-          )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
@@ -415,9 +260,7 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
           <Button
             onClick={handleSubmit(onFormSubmit)}
             disabled={isSubmitting || !!errors.name || (
-              payloadKind === "agent_turn" ? !!errors.message :
-              payloadKind === "command" ? !!errors.commandArgvText :
-              !!(errors.staticMessageText || errors.staticTargetChannel || errors.staticTargetGroups || errors.staticImages)
+              payloadKind === "command" ? !!errors.commandArgvText : !!errors.message
             )}
           >
             {isSubmitting ? t("create.creating") : t("create.create")}

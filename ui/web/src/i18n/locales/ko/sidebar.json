@@ -19,6 +19,7 @@
     "contacts": "연락처",
     "skills": "스킬",
     "cron": "Cron",
+    "scheduledMessages": "예약 메시지",
     "customTools": "사용자 지정 도구",
     "builtinTools": "내장 도구",
     "mcpServers": "MCP 서버",

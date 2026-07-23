@@ -95,6 +95,11 @@ export const Methods = {
   CRON_RUN: "cron.run",
   CRON_RUNS: "cron.runs",
 
+  SCHEDULED_MSG_LIST: "scheduledmsg.list",
+  SCHEDULED_MSG_CREATE: "scheduledmsg.create",
+  SCHEDULED_MSG_UPDATE: "scheduledmsg.update",
+  SCHEDULED_MSG_DELETE: "scheduledmsg.delete",
+
   CHANNELS_LIST: "channels.list",
   CHANNELS_STATUS: "channels.status",
   CHANNELS_TOGGLE: "channels.toggle",

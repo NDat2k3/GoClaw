@@ -13,6 +13,7 @@ import enTeams from "./locales/en/teams.json";
 import enSessions from "./locales/en/sessions.json";
 import enSkills from "./locales/en/skills.json";
 import enCron from "./locales/en/cron.json";
+import enScheduledMessages from "./locales/en/scheduled-messages.json";
 import enConfig from "./locales/en/config.json";
 import enChannels from "./locales/en/channels.json";
 import enProviders from "./locales/en/providers.json";
@@ -56,6 +57,7 @@ import viTeams from "./locales/vi/teams.json";
 import viSessions from "./locales/vi/sessions.json";
 import viSkills from "./locales/vi/skills.json";
 import viCron from "./locales/vi/cron.json";
+import viScheduledMessages from "./locales/vi/scheduled-messages.json";
 import viConfig from "./locales/vi/config.json";
 import viChannels from "./locales/vi/channels.json";
 import viProviders from "./locales/vi/providers.json";
@@ -238,6 +240,7 @@ const ns = [
   "hooks",
   "webhooks",
   "workstations",
+  "scheduled-messages",
 ] as const;
 
 i18n.use(initReactI18next).init({
@@ -245,7 +248,7 @@ i18n.use(initReactI18next).init({
     en: {
       common: enCommon, sidebar: enSidebar, topbar: enTopbar, login: enLogin,
       overview: enOverview, chat: enChat, agents: enAgents, teams: enTeams,
-      sessions: enSessions, skills: enSkills, cron: enCron, config: enConfig,
+      sessions: enSessions, skills: enSkills, cron: enCron, "scheduled-messages": enScheduledMessages, config: enConfig,
       channels: enChannels, providers: enProviders, traces: enTraces,
       events: enEvents, usage: enUsage,
       approvals: enApprovals, nodes: enNodes, logs: enLogs, tools: enTools,
@@ -266,7 +269,7 @@ i18n.use(initReactI18next).init({
     vi: {
       common: viCommon, sidebar: viSidebar, topbar: viTopbar, login: viLogin,
       overview: viOverview, chat: viChat, agents: viAgents, teams: viTeams,
-      sessions: viSessions, skills: viSkills, cron: viCron, config: viConfig,
+      sessions: viSessions, skills: viSkills, cron: viCron, "scheduled-messages": viScheduledMessages, config: viConfig,
       channels: viChannels, providers: viProviders, traces: viTraces,
       events: viEvents, usage: viUsage,
       approvals: viApprovals, nodes: viNodes, logs: viLogs, tools: viTools,
@@ -287,7 +290,7 @@ i18n.use(initReactI18next).init({
     zh: {
       common: zhCommon, sidebar: zhSidebar, topbar: zhTopbar, login: zhLogin,
       overview: zhOverview, chat: zhChat, agents: zhAgents, teams: zhTeams,
-      sessions: zhSessions, skills: zhSkills, cron: zhCron, config: zhConfig,
+      sessions: zhSessions, skills: zhSkills, cron: zhCron, "scheduled-messages": enScheduledMessages, config: zhConfig,
       channels: zhChannels, providers: zhProviders, traces: zhTraces,
       events: zhEvents, usage: zhUsage,
       approvals: zhApprovals, nodes: zhNodes, logs: zhLogs, tools: zhTools,
@@ -308,7 +311,7 @@ i18n.use(initReactI18next).init({
     ko: {
       common: koCommon, sidebar: koSidebar, topbar: koTopbar, login: koLogin,
       overview: koOverview, chat: koChat, agents: koAgents, teams: koTeams,
-      sessions: koSessions, skills: koSkills, cron: koCron, config: koConfig,
+      sessions: koSessions, skills: koSkills, cron: koCron, "scheduled-messages": enScheduledMessages, config: koConfig,
       channels: koChannels, providers: koProviders, traces: koTraces,
       events: koEvents, usage: koUsage,
       approvals: koApprovals, nodes: koNodes, logs: koLogs, tools: koTools,
@@ -326,7 +329,7 @@ i18n.use(initReactI18next).init({
     ru: {
       common: ruCommon, sidebar: ruSidebar, topbar: ruTopbar, login: ruLogin,
       overview: ruOverview, chat: ruChat, agents: ruAgents, teams: ruTeams,
-      sessions: ruSessions, skills: ruSkills, cron: ruCron, config: ruConfig,
+      sessions: ruSessions, skills: ruSkills, cron: ruCron, "scheduled-messages": enScheduledMessages, config: ruConfig,
       channels: ruChannels, providers: ruProviders, traces: ruTraces,
       events: ruEvents, usage: ruUsage,
       approvals: ruApprovals, nodes: ruNodes, logs: ruLogs, tools: ruTools,

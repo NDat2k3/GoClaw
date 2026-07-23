@@ -1,0 +1,90 @@
+{
+  "title": "Tin nhắn hẹn giờ",
+  "description": "Hẹn giờ gửi tin nhắn cố định (văn bản + hình ảnh) tự động tới nhóm hoặc người trên các kênh đã kết nối. Không dùng AI.",
+  "newMessage": "Tạo tin nhắn",
+  "loading": "Đang tải...",
+  "empty": {
+    "title": "Chưa có tin nhắn hẹn giờ",
+    "description": "Tạo tin nhắn đầu tiên, hệ thống sẽ tự động gửi theo lịch bạn đặt."
+  },
+  "pickChannel": {
+    "title": "Chọn kênh gửi",
+    "description": "Chọn kênh đã kết nối để gửi tin",
+    "none": "Chưa có kênh nào được kết nối",
+    "groups": "{{count}} nhóm",
+    "notConnected": "Chưa kết nối"
+  },
+  "form": {
+    "createTitle": "Tạo tin nhắn hẹn giờ",
+    "editTitle": "Chỉnh sửa tin nhắn hẹn giờ",
+    "name": "Tên gợi nhớ",
+    "namePlaceholder": "VD: Thông báo buổi sáng",
+    "channel": "Kênh gửi",
+    "changeChannel": "Đổi kênh",
+    "content": "Nội dung tin nhắn",
+    "contentPlaceholder": "Nhập nội dung sẽ gửi...",
+    "images": "Hình ảnh",
+    "addImages": "Thêm ảnh",
+    "uploading": "Đang tải lên...",
+    "uploaded": "Đã tải lên",
+    "maxImages": "Tối đa 9 ảnh",
+    "targets": "Gửi đến",
+    "targetsHint": "Chọn nhóm hoặc người sẽ nhận tin",
+    "searchTargets": "Tìm nhóm hoặc người...",
+    "tabGroups": "Nhóm",
+    "tabUsers": "Người",
+    "manualId": "Nhập ID thủ công",
+    "add": "Thêm",
+    "selectedCount": "Đã chọn {{count}}",
+    "times": "Thời gian gửi",
+    "timesHint": "Chọn một hoặc nhiều mốc thời gian (giờ Việt Nam, GMT+7)",
+    "addTime": "Thêm thời gian",
+    "noTimes": "Chưa có thời gian nào",
+    "pastTime": "đã qua",
+    "save": "Lưu",
+    "saving": "Đang lưu...",
+    "cancel": "Hủy",
+    "requireContent": "Cần có nội dung hoặc ít nhất một ảnh",
+    "requireTargets": "Chọn ít nhất một nơi nhận",
+    "requireTimes": "Thêm ít nhất một thời gian trong tương lai",
+    "requireChannel": "Vui lòng chọn kênh gửi"
+  },
+  "card": {
+    "occurrences_one": "{{count}} lần gửi",
+    "occurrences_other": "{{count}} lần gửi",
+    "nextSend": "Kế tiếp: {{time}}",
+    "noUpcoming": "Không còn lịch gửi",
+    "recipients": "{{count}} nơi nhận",
+    "images": "{{count}} ảnh",
+    "edit": "Sửa",
+    "delete": "Xóa"
+  },
+  "status": {
+    "pending": "Chờ gửi",
+    "sent": "Đã gửi",
+    "error": "Lỗi",
+    "disabled": "Đã tắt"
+  },
+  "history": {
+    "title": "Lịch sử gửi",
+    "empty": "Chưa có lần gửi nào",
+    "upcoming": "Sắp gửi",
+    "past": "Đã gửi"
+  },
+  "delete": {
+    "title": "Xóa tin nhắn hẹn giờ",
+    "description": "Xóa \"{{name}}\"? Tất cả lịch gửi chưa thực hiện sẽ bị hủy.",
+    "confirm": "Xóa"
+  },
+  "toast": {
+    "created": "Đã tạo tin nhắn hẹn giờ",
+    "updated": "Đã cập nhật tin nhắn",
+    "deleted": "Đã xóa tin nhắn",
+    "failedCreate": "Không thể tạo tin nhắn",
+    "failedUpdate": "Không thể cập nhật tin nhắn",
+    "failedDelete": "Không thể xóa tin nhắn",
+    "failedUpload": "Tải ảnh thất bại",
+    "failedLoadGroups": "Không thể tải danh sách nhóm/liên hệ"
+  },
+  "untitled": "Không tên"
+}

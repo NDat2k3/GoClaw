@@ -33,9 +33,12 @@ export function CronPage() {
 
   // All hooks must be called before any conditional return
   const filtered = useMemo(() => {
+    // Scheduled-message occurrences are static_message cron jobs managed by the
+    // dedicated "Tin nhắn hẹn giờ" page — hide them from the generic cron list.
+    const visible = jobs.filter((j) => j.payload?.kind !== "static_message");
     const q = search.toLowerCase();
-    if (!q) return jobs;
-    return jobs.filter(
+    if (!q) return visible;
+    return visible.filter(
       (j) =>
         j.name.toLowerCase().includes(q) ||
         (j.payload?.message ?? "").toLowerCase().includes(q),
