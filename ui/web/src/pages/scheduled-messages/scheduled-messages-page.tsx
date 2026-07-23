@@ -109,9 +109,9 @@ export function ScheduledMessagesPage() {
                     <div className="truncate font-medium">{c.display_name || c.name}</div>
                     <div className="mt-0.5 text-xs text-muted-foreground">{c.channel_type}</div>
                   </div>
-                  {countByChannel[c.name] > 0 && (
+                  {(countByChannel[c.name] ?? 0) > 0 && (
                     <Badge variant="secondary" className="mt-auto">
-                      {t("card.occurrences", { count: countByChannel[c.name] })}
+                      {t("card.occurrences", { count: countByChannel[c.name] ?? 0 })}
                     </Badge>
                   )}
                 </button>

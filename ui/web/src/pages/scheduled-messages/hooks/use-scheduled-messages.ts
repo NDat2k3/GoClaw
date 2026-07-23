@@ -71,7 +71,7 @@ export function useScheduledMessages() {
   const createMessage = useCallback(
     async (input: ScheduledMsgInput) => {
       try {
-        await ws.call(Methods.SCHEDULED_MSG_CREATE, input);
+        await ws.call(Methods.SCHEDULED_MSG_CREATE, input as unknown as Record<string, unknown>);
         await invalidate();
         toast.success(i18next.t("scheduled-messages:toast.created"));
       } catch (err) {
@@ -85,7 +85,7 @@ export function useScheduledMessages() {
   const updateMessage = useCallback(
     async (batchId: string, input: ScheduledMsgInput) => {
       try {
-        await ws.call(Methods.SCHEDULED_MSG_UPDATE, { batchId, ...input });
+        await ws.call(Methods.SCHEDULED_MSG_UPDATE, { batchId, ...input } as unknown as Record<string, unknown>);
         await invalidate();
         toast.success(i18next.t("scheduled-messages:toast.updated"));
       } catch (err) {
