@@ -343,6 +343,9 @@ func isWriteMethod(method string) bool {
 		protocol.MethodCronDelete,
 		protocol.MethodCronToggle,
 		protocol.MethodCronRun,
+		protocol.MethodScheduledMsgCreate,
+		protocol.MethodScheduledMsgUpdate,
+		protocol.MethodScheduledMsgDelete,
 		protocol.MethodSend,
 		protocol.MethodLLMComplete,
 		protocol.MethodAgentsFileSet,
@@ -406,6 +409,7 @@ func isReadMethod(method string) bool {
 		protocol.MethodCronList,
 		protocol.MethodCronStatus,
 		protocol.MethodCronRuns,
+		protocol.MethodScheduledMsgList,
 
 		// Channels read
 		protocol.MethodChannelsList,
