@@ -70,8 +70,7 @@ export function CronFormDialog({ open, onOpenChange, onSubmit }: CronFormDialogP
 
   const scheduleKind = watch("scheduleKind");
   const payloadKind = watch("payloadKind");
-  const staticTargetChannel = watch("staticTargetChannel");
-  const staticTargetGroups = watch("staticTargetGroups");
+  const staticTargetGroups = watch("staticTargetGroups") || [];
   const staticImages = watch("staticImages");
 
   const onFormSubmit = async (data: CronCreateFormData) => {
