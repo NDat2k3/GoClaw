@@ -49,6 +49,9 @@ func registerAllMethods(server *gateway.Server, agents *agent.Router, sessStore 
 	// Phase 2: Cron (store created externally, shared with gateway)
 	methods.NewCronMethods(cronStore, msgBus, cfg).Register(router)
 
+	// Scheduled messages ("Tin nhắn hẹn giờ") — reuses the cron store/engine.
+	methods.NewScheduledMessageMethods(cronStore, msgBus, cfg).Register(router)
+
 	// Phase 2: Heartbeat
 	heartbeatMethods := methods.NewHeartbeatMethods(heartbeatStore, msgBus)
 	// Wire cache-aware resolver so heartbeat can accept agent_key or UUID

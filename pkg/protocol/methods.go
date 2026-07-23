@@ -64,6 +64,13 @@ const (
 	MethodCronRun    = "cron.run"
 	MethodCronRuns   = "cron.runs"
 
+	// Scheduled messages ("Tin nhắn hẹn giờ") — fixed text+image sends at chosen
+	// datetimes to one or more chat targets, no LLM. Built on the cron engine.
+	MethodScheduledMsgList   = "scheduledmsg.list"
+	MethodScheduledMsgCreate = "scheduledmsg.create"
+	MethodScheduledMsgUpdate = "scheduledmsg.update"
+	MethodScheduledMsgDelete = "scheduledmsg.delete"
+
 	MethodChannelsList   = "channels.list"
 	MethodChannelsStatus = "channels.status"
 	MethodChannelsToggle = "channels.toggle"

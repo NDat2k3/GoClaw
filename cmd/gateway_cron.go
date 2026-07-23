@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"os"
 	"strings"
 	"time"
 
@@ -100,7 +101,7 @@ func makeCronJobHandler(sched *scheduler.Scheduler, msgBus *bus.MessageBus, cfg 
 		case store.CronPayloadKindStaticMessage:
 			// Fixed broadcast payload: send a static message with media to multiple
 			// chat targets, without an LLM/agent turn (zero model tokens).
-			return runStaticMessageCronJob(job, msgBus)
+			return runStaticMessageCronJob(job, channelMgr, msgBus)
 		default:
 			// agent_turn payload: fall through to scheduler-based LLM agent execution
 		}
@@ -298,28 +299,63 @@ func runCommandCronJob(cfg *config.Config, job *store.CronJob, tenantStore store
 	return &store.CronJobResult{Content: res.Summary}, nil
 }
 
-func runStaticMessageCronJob(job *store.CronJob, msgBus *bus.MessageBus) (*store.CronJobResult, error) {
+// runStaticMessageCronJob delivers a fixed text+image message to one or more
+// chat targets with NO LLM involved. It pre-validates the two things that
+// previously failed silently (the outbound bus path swallows send errors):
+//   1. The delivery channel must be registered — otherwise dispatchOutbound
+//      drops the message with only a log line.
+//   2. Every image must be an existing local file — the Zalo sender does
+//      os.ReadFile on the path, and a missing/remote path fails silently.
+//
+// It also routes each target correctly: a "group" target carries group_id
+// metadata (forcing Zalo ThreadTypeGroup), while a "user" target does not.
+func runStaticMessageCronJob(job *store.CronJob, channelMgr *channels.Manager, msgBus *bus.MessageBus) (*store.CronJobResult, error) {
 	spec := job.Payload.StaticMessage
 	if err := store.ValidateCronStaticMessageSpec(spec); err != nil {
 		return nil, err
 	}
 
-	// Build media attachments from URLs/paths.
-	var media []bus.MediaAttachment
-	for _, imgURL := range spec.Images {
-		media = append(media, bus.MediaAttachment{URL: imgURL})
+	// Guard #1: the channel must exist / be registered. resolveChannelType
+	// returns "" for an unknown channel name; sending to it would be a silent
+	// drop in dispatchOutbound.
+	if resolveChannelType(channelMgr, job.DeliverChannel) == "" {
+		return nil, fmt.Errorf("scheduled message: delivery channel %q is not registered or unavailable", job.DeliverChannel)
 	}
 
-	// Send to each target group.
-	sent := 0
-	for _, target := range spec.Targets {
-		outMsg := bus.OutboundMessage{
-			Channel:  job.DeliverChannel,
-			ChatID:   target,
-			Content:  spec.Message,
-			Media:    media,
-			Metadata: map[string]string{"group_id": target},
+	// Guard #2: every image must be a readable local file. The outbound Zalo
+	// path reads media via os.ReadFile — a missing/remote path is swallowed as
+	// a warning, so verify up-front and surface a real error instead.
+	var media []bus.MediaAttachment
+	for _, imgPath := range spec.Images {
+		info, err := os.Stat(imgPath)
+		if err != nil || info.IsDir() {
+			return nil, fmt.Errorf("scheduled message: image file not found or unreadable: %s", imgPath)
 		}
+		media = append(media, bus.MediaAttachment{URL: imgPath})
+	}
+
+	// Send one message per target so each carries its own correct ChatID and
+	// thread-type routing.
+	sent := 0
+	for i, target := range spec.Targets {
+		targetType := "group"
+		if i < len(spec.TargetTypes) && spec.TargetTypes[i] == "user" {
+			targetType = "user"
+		}
+
+		outMsg := bus.OutboundMessage{
+			Channel: job.DeliverChannel,
+			ChatID:  target,
+			Content: spec.Message,
+			Media:   media,
+		}
+		// Only group targets get group_id metadata — this is what flips the Zalo
+		// sender to ThreadTypeGroup. A user (DM) target must NOT set it, or the
+		// message would be routed to a group thread that doesn't exist.
+		if targetType == "group" {
+			outMsg.Metadata = map[string]string{"group_id": target}
+		}
+
 		msgBus.PublishOutbound(outMsg)
 		sent++
 		// Small delay between targets to avoid rate limiting (300ms per message,
@@ -327,7 +363,7 @@ func runStaticMessageCronJob(job *store.CronJob, msgBus *bus.MessageBus) (*store
 		time.Sleep(300 * time.Millisecond)
 	}
 
-	summary := fmt.Sprintf("Sent to %d/%d target(s)", sent, len(spec.Targets))
+	summary := fmt.Sprintf("Đã gửi %d/%d đích", sent, len(spec.Targets))
 	return &store.CronJobResult{Summary: summary}, nil
 }
 

@@ -88,10 +88,25 @@ type CronCommandSpec struct {
 type CronStaticMessageSpec struct {
 	// Message is the literal text content, sent as-is to each target.
 	Message string `json:"message,omitempty"`
-	// Images is a list of image URLs or local paths, sent in order.
+	// Images is a list of local file paths (absolute, resolved at create time),
+	// sent in order. The Zalo sender reads these via os.ReadFile, so remote URLs
+	// and relative paths do NOT work — they must be absolute local paths.
 	Images []string `json:"images,omitempty"`
 	// Targets is the list of chat/group IDs on the job's DeliverChannel to send to.
 	Targets []string `json:"targets"`
+	// TargetTypes is parallel to Targets: "group" or "user" per target. A missing
+	// or empty entry defaults to "group" (back-compat with older rows). This drives
+	// Zalo ThreadType selection — a group target sets group_id metadata, a user
+	// target does not, so the message routes to the correct thread.
+	TargetTypes []string `json:"targetTypes,omitempty"`
+	// TargetNames is parallel to Targets: human-readable display names for the UI.
+	TargetNames []string `json:"targetNames,omitempty"`
+	// Title is the user-facing name of the scheduled message (shared across all
+	// per-datetime occurrences that belong to the same logical message).
+	Title string `json:"title,omitempty"`
+	// BatchID groups the per-datetime occurrence jobs into one logical scheduled
+	// message, so the UI can list/edit/delete them as a single unit.
+	BatchID string `json:"batchId,omitempty"`
 }
 
 // CronPayload describes what a job does when triggered.
